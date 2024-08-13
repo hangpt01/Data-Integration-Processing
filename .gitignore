@@ -37,3 +37,7 @@ spark-checkpoints/
 model_pipeline/ 
 merge_data/
 Dataset
+rotten-tomatoes-9800-movie-critic-and-user-reviews.zip
+archive/
+archive1/
+rotten_tomatoes/
