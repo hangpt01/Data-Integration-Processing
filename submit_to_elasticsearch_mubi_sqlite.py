@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, from_json, udf
+from pyspark.sql.functions import col, from_json, udf, lit
 from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType, DoubleType
 import uuid
 import logging
@@ -33,9 +33,9 @@ def create_index_with_mapping(index_name):
                     "movieId": {"type": "keyword"},
                     "rating": {"type": "float"},
                     "reviewId": {"type": "keyword"},
-                    "score": {"type": "double"},
+                    "score": {"type": "float"},  # Changed from double to float to match rating type
                     "userId": {"type": "keyword"},
-                    "movieYear": {"type": "integer"},  # Convert movieYear to integer
+                    "movieYear": {"type": "integer"},
                     "movieTitle": {"type": "text"}
                 }
             }
@@ -46,7 +46,7 @@ def create_index_with_mapping(index_name):
 index_name = "movie_reviews"
 create_index_with_mapping(index_name)
 
-topic_name = "rotten-tomatoes"
+topic_name = "mubi-sqlite"
 
 # Read from Kafka
 df = spark.readStream \
@@ -62,28 +62,29 @@ kafka_df = df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)")
 
 # Define the updated schema for the JSON data
 schema = StructType([
-    StructField("movieId", StringType(), True),
-    StructField("rating", FloatType(), True),
-    StructField("reviewId", StringType(), True),
-    StructField("score", DoubleType(), True),
-    StructField("userId", StringType(), True),
-    StructField("movieYear", StringType(), True),  # Initially as StringType to convert later
-    StructField("movieTitle", StringType(), True)
+    StructField("review_id", StringType(), True),
+    StructField("reviewer", StringType(), True),
+    StructField("movie", StringType(), True),
+    StructField("rating", StringType(), True),
+    StructField("review_summary", StringType(), True),
+    StructField("review_date", StringType(), True),
+    StructField("spoiler_tag", IntegerType(), True),
+    StructField("review_detail", StringType(), True),
+    StructField("helpful", StringType(), True)
 ])
 
 # Parse the JSON data and include the relevant fields
 parsed_df = kafka_df.withColumn("value", from_json(col("value"), schema))
 
-# Convert movieYear to integer and select relevant fields
+# Process data: map fields, convert types, add missing fields with null values, alias rating as score
 processed_df = parsed_df.select(
-    col("key"),
-    col("value.movieId"),
-    col("value.rating"),
-    col("value.reviewId"),
-    col("value.score"),
-    col("value.userId"),
-    col("value.movieYear").cast(IntegerType()).alias("movieYear"),  # Convert movieYear to integer
-    col("value.movieTitle")
+    col("value.review_id").alias("reviewId"),
+    col("value.reviewer").alias("userId"),
+    (col("value.rating").cast(FloatType()) / 2).alias("rating"),  # Rating divided by 2
+    col("value.rating").cast(FloatType()).alias("score"),  # Alias rating as score
+    lit(None).cast(StringType()).alias("movieId"),  # Set to null
+    lit(None).cast(IntegerType()).alias("movieYear"),  # Set to null
+    col("value.movie").alias("movieTitle")
 )
 
 # Add a unique 'id' column to the DataFrame using a UUID
@@ -113,7 +114,7 @@ def write_data_to_elasticsearch(df, epoch_id):
                 "reviewId": row['reviewId'],
                 "score": row['score'],
                 "userId": row['userId'],
-                "movieYear": row['movieYear'],      # Integer type
+                "movieYear": row['movieYear'],
                 "movieTitle": row['movieTitle']
             }
         }
