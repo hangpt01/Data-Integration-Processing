@@ -206,6 +206,10 @@ if __name__ == "__main__":
         .option("header", "true") \
         .schema(schema) \
         .load(train_file_path)
+    
+    # print(train_df)
+    # print(train_df.head(5))
+    # import pdb; pdb.set_trace()
 
     # Read test CSV file from HDFS
     test_df = spark.read \

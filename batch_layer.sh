@@ -12,9 +12,28 @@ hdfs dfs -mkdir /user
 hdfs dfs -mkdir /user/pth
 
 
-# spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.13:3.3.0 sent_data2lazadatopic.py
-# spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.13:3.3.0 kafka_to_hdfs.py amazon
-# spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.13:3.3.0 kafka_to_hdfs.py lazada
+#json
+hdfs dfs -rm /user/Asus/testing_data.json
+del Dataset\IMDB\testing_data.json
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.13:3.3.0 kafka_to_hdfs.py
+hdfs dfs -ls /user/Asus
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.13:3.3.0 send_data_of_imdb.py
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.13:3.3.0 kafka_to_hdfs.py
+hdfs dfs -get /user/Asus/testing_data.json C:\Data-Integration-Processing\Project\Data-Integration-Processing\Dataset\IMDB\testing_data.json
+hdfs dfs -get /user/Asus/testing_data.json C:\Data-Integration-Processing\Project\Data-Integration-Processing\Dataset\IMDB\testing_data.json
+
+#txt - not working yet
+hdfs dfs -rm /user/Asus/testing_data.txt
+del Dataset\IMDB\testing_data.txt
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.13:3.3.0 kafka_to_hdfs.py
+hdfs dfs -ls /user/Asus
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.13:3.3.0 send_data_of_imdb.py
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.13:3.3.0 kafka_to_hdfs.py
+hdfs dfs -get /user/Asus/testing_data.txt C:\Data-Integration-Processing\Project\Data-Integration-Processing\Dataset\IMDB\testing_data.txt
+hdfs dfs -get /user/Asus/testing_data.txt C:\Data-Integration-Processing\Project\Data-Integration-Processing\Dataset\IMDB\testing_data.txt
+
+
+
 
 # hdfs dfs -put C:\Data-Integration-Processing\Project\Data-Integration-Processing\Dataset\IMDB\csv\part-01.csv /user/pth
 # hdfs dfs -put C:\Data-Integration-Processing\Project\Data-Integration-Processing\Dataset\IMDB\csv\part-02.csv /user/pth
@@ -30,6 +49,8 @@ hdfs dfs -ls /user/pth
 
 # spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.13:3.3.0 test_recommend.py
 spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.13:3.3.0 recommender.py
+# spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.13:3.3.0 recommender_from_kafka.py
+
 hdfs dfs -rm -r /user/pth/model_pipeline_hdfs_movie
 
 
